@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"log"
-	"os"
 	// blank import for sqlite driver
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/smf8/url-shortener/model"
@@ -13,9 +12,6 @@ var db *sql.DB
 
 //CreateDB creates a database file if it's created
 func CreateDB(filename string) {
-	// remove database file if it exists
-	os.Remove(filename + ".db")
-
 	// open or create a sqlite database file with sqlite3 driver
 	var err error
 	db, err = sql.Open("sqlite3", filename+".db")
@@ -30,7 +26,7 @@ func CreateDB(filename string) {
 
 //createTable creates sql table
 func createTable() error {
-	statement := `CREATE TABLE IF NOT EXISTS links (hash text unique not null, url text)`
+	statement := `CREATE TABLE IF NOT EXISTS links (hash text unique not null, url text, usage integer)`
 	_, err := db.Exec(statement)
 	return err
 }
@@ -43,12 +39,12 @@ func AddLink(link model.Link) {
 		log.Fatal(err)
 	}
 	// prepare insert query
-	statement, err := tx.Prepare("INSERT INTO links(hash,url) VALUES (?,?)")
+	statement, err := tx.Prepare("INSERT OR IGNORE INTO links(hash,url) VALUES (?,?)")
 	if err != nil {
 		log.Fatal(err)
 	}
 	// filling insert query with link data
-	res, err := statement.Exec(link.Address, link.Hash)
+	res, err := statement.Exec(link.Hash, link.Address)
 	if err != nil {
 		log.Fatal(res, err)
 	}
@@ -63,4 +59,19 @@ func Close() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+//GetLink retrieves a link from database and returns it
+func GetLink(hash string) model.Link {
+	l := new(model.Link)
+	statement, err := db.Prepare("SELECT hash,url FROM links WHERE hash = ?")
+	if err != nil {
+		log.Fatal(err)
+	}
+	res := statement.QueryRow(hash)
+	err = res.Scan(&l.Hash, &l.Address)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return *l
 }
