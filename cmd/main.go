@@ -1,7 +1,12 @@
 package main
 
-import "github.com/smf8/url-shortener/model"
+import (
+	"github.com/smf8/url-shortener/db"
+	"github.com/smf8/url-shortener/model"
+)
 
 func main() {
-	model.NewLink("google.com")
+	db.CreateDB("urls")
+	db.AddLink(model.NewLink("http://google.com"))
+	defer db.Close()
 }
