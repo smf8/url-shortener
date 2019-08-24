@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"github.com/smf8/url-shortener/db"
-	"github.com/smf8/url-shortener/model"
+	"github.com/smf8/url-shortener/handler"
+	"log"
+	"net/http"
 )
 
 func main() {
 	db.CreateDB("urls")
-	db.AddLink(model.NewLink("http://google.com"))
-	l := db.GetLink(model.GetLinkHash("http://google.com"))
-	db.IncrementUsage(model.GetLinkHash("http://google.com"))
-	fmt.Println(l.Address)
-	defer db.Close()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/new", handler.RegisterURLHandler)
+	mux.HandleFunc("/", handler.RedirectHandler)
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }

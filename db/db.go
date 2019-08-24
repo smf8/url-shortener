@@ -69,10 +69,8 @@ func GetLink(hash string) model.Link {
 		log.Fatal(err)
 	}
 	res := statement.QueryRow(hash)
-	err = res.Scan(&l.Hash, &l.Address, &l.UsedTimes)
-	if err != nil {
-		log.Fatal(err)
-	}
+	res.Scan(&l.Hash, &l.Address, &l.UsedTimes)
+	defer statement.Close()
 	return *l
 }
 
@@ -99,5 +97,4 @@ func IncrementUsage(hash string) {
 		log.Fatal(err)
 	}
 	tx.Commit()
-	//defer statement.Close()
 }
