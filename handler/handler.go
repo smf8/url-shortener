@@ -19,6 +19,8 @@ func RegisterURLHandler(wr http.ResponseWriter, r *http.Request) {
 	go func() {
 		db.AddLink(link)
 	}()
+	wr.WriteHeader(200)
+	wr.Write([]byte("Your new link is : " + r.Host + r.URL.Path[len("/new"):] + "/" + link.Hash))
 }
 
 func RedirectHandler(wr http.ResponseWriter, r *http.Request) {
