@@ -26,7 +26,7 @@ func CreateDB(filename string) {
 
 //createTable creates sql table
 func createTable() error {
-	statement := `CREATE TABLE IF NOT EXISTS links (hash text unique not null, url text, usage integer)`
+	statement := `CREATE TABLE IF NOT EXISTS links (hash text unique not null, url text, usage integer DEFAULT 0)`
 	_, err := db.Exec(statement)
 	return err
 }
@@ -64,14 +64,40 @@ func Close() {
 //GetLink retrieves a link from database and returns it
 func GetLink(hash string) model.Link {
 	l := new(model.Link)
-	statement, err := db.Prepare("SELECT hash,url FROM links WHERE hash = ?")
+	statement, err := db.Prepare("SELECT hash,url,usage FROM links WHERE hash = ?")
 	if err != nil {
 		log.Fatal(err)
 	}
 	res := statement.QueryRow(hash)
-	err = res.Scan(&l.Hash, &l.Address)
+	err = res.Scan(&l.Hash, &l.Address, &l.UsedTimes)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return *l
+}
+
+//DeleteLink deletes a link from sqlite database
+func DeleteLink(hash string) {
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = tx.Exec("DELETE FROM links WHERE hash = ?", hash)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tx.Commit()
+}
+
+func IncrementUsage(hash string) {
+	tx, err := db.Begin()
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = tx.Exec("UPDATE links SET usage = usage +1 WHERE hash = ?", hash)
+	if err != nil {
+		log.Fatal(err)
+	}
+	tx.Commit()
+	//defer statement.Close()
 }

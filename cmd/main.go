@@ -10,6 +10,7 @@ func main() {
 	db.CreateDB("urls")
 	db.AddLink(model.NewLink("http://google.com"))
 	l := db.GetLink(model.GetLinkHash("http://google.com"))
+	db.IncrementUsage(model.GetLinkHash("http://google.com"))
 	fmt.Println(l.Address)
 	defer db.Close()
 }

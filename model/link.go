@@ -7,8 +7,9 @@ import (
 
 //Link is the representation of http urls
 type Link struct {
-	Address string
-	Hash    string
+	Address   string
+	Hash      string
+	UsedTimes int
 }
 
 //NewLink generates a link struct with url's MD5 hash
