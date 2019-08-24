@@ -11,6 +11,9 @@ func main() {
 	db.CreateDB("urls")
 	mux := http.NewServeMux()
 	mux.HandleFunc("/new", handler.RegisterURLHandler)
-	mux.HandleFunc("/", handler.RedirectHandler)
+	mux.HandleFunc("/", handler.MainHandler)
 	log.Fatal(http.ListenAndServe(":8080", mux))
+}
+func loadTmpl(filename string) {
+
 }
