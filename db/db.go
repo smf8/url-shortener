@@ -2,6 +2,10 @@ package db
 
 import (
 	"database/sql"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
+	"github.com/golang-migrate/migrate/v4/source/file"
+
 	"log"
 	// blank import for sqlite driver
 	_ "github.com/mattn/go-sqlite3"
@@ -10,7 +14,48 @@ import (
 
 var db *sql.DB
 
+func Migrate(filename string, migrationPath string) error {
+	var err error
+	db, err = sql.Open("sqlite3", filename+".db")
+	if err != nil {
+		return err
+	}
+	fsrc, err := (&file.File{}).Open("file://" + migrationPath)
+	if err != nil {
+		return err
+	}
+
+	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+
+	m, err := migrate.NewWithInstance(
+		"file",
+		fsrc,
+		"sqlite3",
+		driver,
+	)
+	if err != nil {
+		return err
+	}
+	m.Up()
+	return nil
+}
+
+//NewDB uses go-migrate migration to create tables in links.db
+func NewDB(filename string) error {
+	var err error
+	db, err = sql.Open("sqlite3", filename+".db")
+	if err != nil {
+		return err
+	}
+	e := db.Ping()
+	if e != nil {
+		return err
+	}
+	return nil
+}
+
 //CreateDB creates a database file if it's created
+// useless as we are using go-migrate
 func CreateDB(filename string) {
 	// open or create a sqlite database file with sqlite3 driver
 	var err error

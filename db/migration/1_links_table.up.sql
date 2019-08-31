@@ -1,0 +1,1 @@
+CREATE TABLE links (hash text unique not null, url text, usage integer DEFAULT 0);

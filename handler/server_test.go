@@ -8,14 +8,19 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"time"
 )
 
 func init() {
-	db.CreateDB("tests")
+	err := db.Migrate("../testdb", "../db/migration")
+	if err != nil {
+		log.Fatal("Error in opening database", err)
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/new", RegisterURLHandler)
 	mux.HandleFunc("/", RedirectHandler)
 	go func() { log.Fatal(http.ListenAndServe(":3030", mux)) }()
+	time.Sleep(time.Millisecond * 300)
 }
 func TestRegister(t *testing.T) {
 	l := url.Values{}
@@ -42,5 +47,5 @@ func TestRedirect(t *testing.T) {
 	if resp.StatusCode != http.StatusOK {
 		t.Error("Error on redirection", resp.Status)
 	}
-	defer os.Remove("tests.db")
+	os.Remove("../testdb.db")
 }

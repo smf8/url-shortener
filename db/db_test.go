@@ -7,7 +7,10 @@ import (
 )
 
 func TestDB(t *testing.T) {
-	CreateDB("testdb")
+	err := Migrate("../testdb", "migration")
+	if err != nil {
+		t.Error(err)
+	}
 	links := make([]model.Link, 5)
 	links[0] = model.NewLink("http://google.com")
 	links[1] = model.NewLink("http://yahoo.com")
@@ -45,6 +48,6 @@ func TestDB(t *testing.T) {
 	if l.UsedTimes != 2 {
 		t.Error("Error on incrementing usage")
 	}
-	defer os.Remove("./testdb.db")
 	defer Close()
+	os.Remove("../testdb.db")
 }

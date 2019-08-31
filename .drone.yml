@@ -1,7 +1,15 @@
+
 kind: pipeline
 name: default
 
 steps:
+  - name: migrate
+    image: golang
+    commands:
+      - TMPDIR=$(pwd) && cd
+      - go get -tags 'sqlite3' -u github.com/golang-migrate/migrate/cmd/migrate
+      - cd $TMPDIR
+      - migrate -database "sqlite3://links.db" -path "db/migration" up
   - name: test
     image: golang
     commands:
