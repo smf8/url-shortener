@@ -1,54 +1,57 @@
 package handler
 
 import (
+	"errors"
+	"github.com/labstack/echo"
 	"github.com/smf8/url-shortener/db"
 	"github.com/smf8/url-shortener/model"
-	"html/template"
-	"log"
 	"net/http"
 	"strings"
 )
 
-//RegisterURL reads a url address and stores it returning it's shorten form
-func RegisterURLHandler(wr http.ResponseWriter, r *http.Request) {
-	// read url from POST
-	url := r.PostFormValue("url")
+//SaveUrl gets url form value and saves it inside database
+func SaveUrl(c echo.Context) error {
+	var err error
+	url := c.FormValue("url")
 	if url == "" {
-		http.Error(wr, "Url musn't be empty", http.StatusBadRequest)
-		return
+		err = errors.New("Url musn't be empty")
+		return err
 	}
 	// remove www. from the beginning if exists
 	url = strings.Replace(url, "www.", "", 1)
+	if !strings.Contains(url, "http://") {
+		url = "http://" + url
+	}
+	// create a link struct from url
 	link := model.NewLink(url)
 	go func() {
 		db.AddLink(link)
 	}()
-	wr.WriteHeader(200)
-	wr.Write([]byte("Your new link is : " + r.Host + r.URL.Path[len("/new"):] + "/" + link.Hash))
+	err = c.String(http.StatusOK, "Your shortened link is : "+c.Request().Host+"/"+link.Hash)
+	return err
 }
 
-func MainHandler(wr http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/" || r.URL.Path == "" {
-		tmpl, err := template.ParseFiles("./cmd/addlink.html")
-		if err != nil {
-			log.Fatal(err)
-		}
-		tmpl.Execute(wr, nil)
-	} else {
-		RedirectHandler(wr, r)
-	}
+//MainPage is for showing default form for getting links from user
+func MainPage(c echo.Context) error {
+	err := c.Render(http.StatusOK, "addlink.html", nil)
+	return err
 }
-func RedirectHandler(wr http.ResponseWriter, r *http.Request) {
-	// extract url hash from url path
-	hash := strings.Trim(strings.TrimSpace(r.URL.Path), "/")
-	//fmt.Println(hash)
-	l := db.GetLink(hash)
-	if l.Address != "" {
-		go func() {
-			db.IncrementUsage(hash)
-		}()
-		http.Redirect(wr, r, l.Address, http.StatusSeeOther)
-	} else {
-		http.Error(wr, "Invalid Url", http.StatusBadRequest)
+
+//Redirect redirects requests sent by client
+func Redirect(c echo.Context) error {
+	var err error
+	if c.Param("hash") != "" {
+		hash := c.Param("hash")
+		l := db.GetLink(hash)
+		if l.Address != "" {
+			// Increment usage field of link in `links` table by 1
+			go func() {
+				db.IncrementUsage(hash)
+			}()
+			err = c.Redirect(http.StatusTemporaryRedirect, l.Address)
+		} else {
+			err = c.String(http.StatusBadRequest, "Invalid url")
+		}
 	}
+	return err
 }

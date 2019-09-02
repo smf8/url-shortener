@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	"github.com/golang-migrate/migrate/v4/source/file"
@@ -137,6 +138,7 @@ func IncrementUsage(hash string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(hash)
 	_, err = tx.Exec("UPDATE links SET usage = usage +1 WHERE hash = ?", hash)
 	if err != nil {
 		log.Fatal(err)
