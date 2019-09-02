@@ -3,6 +3,7 @@ package model
 import (
 	"crypto/md5"
 	"encoding/base64"
+	"strings"
 )
 
 //Link is the representation of http urls
@@ -17,13 +18,12 @@ func NewLink(url string) Link {
 	l := new(Link)
 	l.Address = url
 	md5 := md5.Sum([]byte(url))
-	hash := base64.StdEncoding.EncodeToString(md5[:])
-	l.Hash = hash[:6]
+	l.Hash = strings.ReplaceAll(strings.ReplaceAll(base64.StdEncoding.EncodeToString(md5[:])[:6], "/", "_"), "+", "-")
 	return *l
 }
 
 //GetLinkHash returns first 6 characters of the base64 encoded MD5 HASH
 func GetLinkHash(url string) string {
 	md5 := md5.Sum([]byte(url))
-	return base64.StdEncoding.EncodeToString(md5[:])[:6]
+	return strings.ReplaceAll(strings.ReplaceAll(base64.StdEncoding.EncodeToString(md5[:])[:6], "/", "_"), "+", "-")
 }
