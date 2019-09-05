@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/labstack/echo"
 	"github.com/smf8/url-shortener/db"
 	"github.com/smf8/url-shortener/model"
 	"log"
@@ -16,11 +17,11 @@ func init() {
 	if err != nil {
 		log.Fatal("Error in opening database", err)
 	}
-	mux := http.NewServeMux()
-	mux.HandleFunc("/new", RegisterURLHandler)
-	mux.HandleFunc("/", RedirectHandler)
-	go func() { log.Fatal(http.ListenAndServe(":3030", mux)) }()
-	time.Sleep(time.Millisecond * 300)
+	e := echo.New()
+	e.POST("/new", SaveUrl)
+	e.GET("/:hash", Redirect)
+	go func() { e.Logger.Fatal(e.Start(":3030")) }()
+	time.Sleep(time.Millisecond * 500)
 }
 func TestRegister(t *testing.T) {
 	l := url.Values{}
