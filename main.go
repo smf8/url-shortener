@@ -22,7 +22,7 @@ func main() {
 	}
 	e := echo.New()
 	t := &Template{
-		templates: template.Must(template.ParseGlob("cmd/*.html")),
+		templates: template.Must(template.ParseGlob("html/*.html")),
 	}
 	e.Renderer = t
 	e.GET("/", handler.MainPage)
